@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:soap="http://cxf.apache.org/bindings/soap"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/aop
+						http://www.springframework.org/schema/aop/spring-aop.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx.xsd
+						http://cxf.apache.org/bindings/soap 
+						http://cxf.apache.org/schemas/configuration/soap.xsd
+						http://cxf.apache.org/jaxws 
+						http://cxf.apache.org/schemas/jaxws.xsd
+						">
+	<!--1. 注册自定义作业类 -->
+	<bean id="myJob" class="com.studt.quartz.Myjob"></bean>
+	
+	
+	<!--2.配置JobDetail，作业详情  -->
+	<bean id="myDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+		<!-- 注入目标的对象 -->
+		<property name="targetObject" ref="myJob"></property>
+		<!-- 注入目标对象中的调用的指定的方法 -->
+		<property name="targetMethod" value="run"></property>
+	</bean>
+	
+	<!-- 3.配置触发器 -->
+	<bean id="myTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+		<!--注入作业详情  -->
+		<property name="jobDetail" ref="myDetail"></property>
+		
+		<!--注入cron表达式，表示调用这个任务详情中的配置的方法的时间
+			cron表达式：*******  7个符号， 秒 分 时 日 月 周 年  其中最少要有前6个
+			并且*表示每个都执行，如果秒是* 就是每秒  *是分 就是分
+			0/5 表示递增，以0为基础，5来递增，每次递增5，是相对0的，所以也就是间隔5
+			0,5,10 如果在分上，就是没小时中的0分 5分 10分 都执行
+			？ 表示与这个没有关系，这个都可以，只要符合其他的规则就行
+			并且有cron表达式生成器
+		  -->
+		<property name="cronExpression">
+			<!--每5秒执行一次  -->			
+			<value>0/5 * * * *  ?</value>
+		</property>
+	
+	</bean>
+	
+	
+	<!-- 4.配置scheduler，调度器 -->
+	<bean id="scheduler" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<!-- 注入触发器 -->
+		<property name="triggers">
+			<list>
+				<ref bean="myTrigger"/>			
+			</list>	
+		</property>
+	</bean>
+	
+	
+	
+</beans>
